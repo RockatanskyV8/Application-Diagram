@@ -6,6 +6,7 @@ Mostra a organização das pastas, o nome dos arquivos e qual deles está chaman
 
 reader.py
 Mostra o conteudo de cada arquivo, para ser usado como um mapa de funções e variaveis internas no futuro.
+*instale o modulo regex do python para esse funcionar
 
 java.py
 lista de Palavras chave usadas na linguagem java
