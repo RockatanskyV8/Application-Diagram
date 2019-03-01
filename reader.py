@@ -3,31 +3,6 @@ import re
 import regex
 from java import *
 
-# def list_files():
-#     for dirname, dirnames, filenames in os.walk('/your/application/path'):
-#         # print path to all subdirectories first.
-#         for subdirname in dirnames:
-#             print(os.path.join(dirname, subdirname))
-#
-#         # print path to all filenames.
-#         for filename in filenames:
-#             print(os.path.join(dirname, filename), files_info(os.path.join(dirname, filename)))
-#
-#         # Advanced usage:
-#         # editing the 'dirnames' list will stop os.walk() from recursing into there.
-#         if '.git' in dirnames:
-#             # don't go into any .git directories.
-#             dirnames.remove('.git')
-
-# def list_files(startpath = '/your/application/path'):
-#     for root, dirs, files in os.walk(startpath):
-#         level = root.replace(startpath, '').count(os.sep)
-#         indent = ' ' * 4 * (level)
-#         print('{}{}'.format(indent, os.path.basename(root)))
-#         subindent = ' ' * 4 * (level + 1)
-#         for f in files:
-#             print('{}{}'.format(subindent, f))
-
 def remove_comments(string):
     pattern = r"(\".*?\"|\'.*?\')|(/\*.*?\*/|//[^\r\n]*$)"
     # first group captures quoted strings (double or single)
@@ -42,23 +17,34 @@ def remove_comments(string):
             return match.group(1) # captured quoted-string
     return regex.sub(_replacer, string)
 
-#print(re.escape(text))
+def recognize(phrase):
+    def recognize_class(phrase):
+        pattern = r"class ([A-Za-z0-9]+)"
+        r = re.compile(pattern)
+        matches = r.search(phrase)
+        return matches
+
+    def recognize_function(phrase):
+        pattern = r"[A-Za-z0-9]+[\s]*\([A-Za-z0-9\s*]*\)$"
+        r = re.compile(pattern)
+        matches = r.search(phrase)
+        return matches
+
+    if recognize_class(phrase):
+        return recognize_class(phrase).group(1)
+    elif recognize_function(phrase):
+        return recognize_function(phrase).group()
+
 def getWords(phrase):
-    result = []
     indices = []
     for w in words:
         for t in words[w]:
             r = re.compile(r'\b'+ t)
             matches = r.finditer(phrase)
             for m in matches:
-                indices.append(m.span()[0])
-                indices.append(m.span()[1])
-    indices = sorted(indices)
-    if indices != []:
-        [result.append(phrase[i:j].strip()) for i,j in zip(indices, indices[1:]+[None])]
-    else:
-        result.append(phrase)
-    return [r for r in result if r]
+                indices.append(m.group())
+    if indices and recognize(phrase) :
+        return [recognize(phrase), indices]
 
 def separate(text):
     res = ((text.replace("{", "\n{\n")).replace("}", "\n}\n")).replace(";", "\n")
@@ -73,7 +59,7 @@ def separate(text):
             indices.append(aux[0])
             indices.append(aux[1])
     [result.append(res[i:j].strip()) for i,j in zip(indices, indices[1:]+[None])]
-    return [getWords(r) for r in result if r]
+    return [getWords(r) for r in result if r and getWords(r) is not None]
 
 def files_info(file):
     print()
@@ -86,7 +72,7 @@ def files_info(file):
         for r in separate(result):
             print(r)
 
-def list_files(startpath = '/your/application/path'):
+def list_files(startpath = 'file/path'):
     for root, dirs, files in os.walk(startpath):
         for f in files:
             if ".java" in f:
