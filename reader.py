@@ -17,34 +17,22 @@ def remove_comments(string):
             return match.group(1) # captured quoted-string
     return regex.sub(_replacer, string)
 
-def recognize(phrase):
-    def recognize_class(phrase):
-        pattern = r"class ([A-Za-z0-9]+)"
-        r = re.compile(pattern)
-        matches = r.search(phrase)
-        return matches
+# def recognize(phrase):
+#     def recognize_class(phrase):
+#         pattern = r"class ([A-Za-z0-9]+)"
+#         r = re.compile(pattern)
+#         matches = r.search(phrase)
+#         return matches
+#     if recognize_class(phrase):
+#         return recognize_class(phrase).group(1)
+#     elif recognize_function(phrase):
+#         return recognize_function(phrase).group()
 
-    def recognize_function(phrase):
-        pattern = r"[A-Za-z0-9]+[\s]*\([A-Za-z0-9\s*]*\)$"
-        r = re.compile(pattern)
-        matches = r.search(phrase)
-        return matches
-
-    if recognize_class(phrase):
-        return recognize_class(phrase).group(1)
-    elif recognize_function(phrase):
-        return recognize_function(phrase).group()
-
-def getWords(phrase):
-    indices = []
-    for w in words:
-        for t in words[w]:
-            r = re.compile(r'\b'+ t)
-            matches = r.finditer(phrase)
-            for m in matches:
-                indices.append(m.group())
-    if indices and recognize(phrase) :
-        return [recognize(phrase), indices]
+def recognize_function(phrase):
+    pattern = r"[A-Za-z0-9]+[\s]*\([A-Za-z0-9\s*]*\)$"
+    r = re.compile(pattern)
+    matches = r.search(phrase)
+    return matches
 
 def separate(text):
     res = ((text.replace("{", "\n{\n")).replace("}", "\n}\n")).replace(";", "\n")
@@ -59,7 +47,7 @@ def separate(text):
             indices.append(aux[0])
             indices.append(aux[1])
     [result.append(res[i:j].strip()) for i,j in zip(indices, indices[1:]+[None])]
-    return [getWords(r) for r in result if r and getWords(r) is not None]
+    return [recognize_function(r).group() for r in result if r and recognize_function(r) is not None]
 
 def files_info(file):
     print()
@@ -68,8 +56,9 @@ def files_info(file):
         total = ""
         for line in f:
             total = total + (line.replace("\t", ""))
-        result = remove_comments(total).replace("\n", "")
-        for r in separate(result):
+        aux = remove_comments(total).replace("\n", "")
+        result = []
+        for r in separate(aux):
             print(r)
 
 def list_files(startpath = 'file/path'):
