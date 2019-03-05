@@ -17,54 +17,42 @@ def remove_comments(string):
             return match.group(1) # captured quoted-string
     return regex.sub(_replacer, string)
 
-# def recognize(phrase):
-#     def recognize_class(phrase):
-#         pattern = r"class ([A-Za-z0-9]+)"
-#         r = re.compile(pattern)
-#         matches = r.search(phrase)
-#         return matches
-#     if recognize_class(phrase):
-#         return recognize_class(phrase).group(1)
-#     elif recognize_function(phrase):
-#         return recognize_function(phrase).group()
+def recognize_class(phrase):
+    pattern = r"class ([A-Za-z0-9]+)\{"
+    r = re.compile(pattern)
+    matches = r.search(phrase)
+    return matches
 
 def recognize_function(phrase):
-    pattern = r"[A-Za-z0-9]+[\s]*\([A-Za-z0-9\s*]*\)$"
+    pattern = r"[\s][A-Za-z0-9]+[\s]*\([A-Za-z0-9\s*]*\)"
     r = re.compile(pattern)
     matches = r.search(phrase)
     return matches
 
 def separate(text):
-    res = ((text.replace("{", "\n{\n")).replace("}", "\n}\n")).replace(";", "\n")
-    result = []
-    indices = [0]
-    pattern = r"(\".\s*?\"|\'.\s*?\')|(\s)"
+    pattern = r"(\".*?\"|\'.*?\')|([\{\};])"
     regex = re.compile(pattern, re.MULTILINE|re.DOTALL)
-    match = regex.finditer(res)
-    for m in match:
-        if m.group(1) is None and m.group(2) != ' ':
-            aux = m.span()
-            indices.append(aux[0])
-            indices.append(aux[1])
-    [result.append(res[i:j].strip()) for i,j in zip(indices, indices[1:]+[None])]
-    return [recognize_function(r).group() for r in result if r and recognize_function(r) is not None]
+    matches = regex.finditer(text)
+    indices = [0]
+    [(indices.append(m.span()[0]), indices.append(m.span()[1])) for m in matches if m.group(1) is None]
+    return [text[i:j].strip() for i,j in zip(indices, indices[1:]+[None]) if text[i:j]]
 
-def files_info(file):
+def files_info(file, file_name):
     print()
-    print(file, '\n')
+    print(file, ' ', file_name.split('.')[0], '\n')
     with open(file) as f:
         total = ""
         for line in f:
             total = total + (line.replace("\t", ""))
         aux = remove_comments(total).replace("\n", "")
-        result = []
-        for r in separate(aux):
-            print(r)
+        for s in separate(aux):
+            if recognize_function(s):
+                print(recognize_function(s).group())
 
 def list_files(startpath = 'file/path'):
     for root, dirs, files in os.walk(startpath):
         for f in files:
             if ".java" in f:
-                files_info(root + '/' + f)
+                files_info(root + '/' + f, f)
 
 list_files()
