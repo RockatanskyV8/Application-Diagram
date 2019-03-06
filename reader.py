@@ -24,7 +24,7 @@ def recognize_class(phrase):
     return matches
 
 def recognize_function(phrase):
-    pattern = r"[\s][A-Za-z0-9]+[\s]*\([A-Za-z0-9\s*]*\)"
+    pattern = r"([A-Za-z0-9\s*]+)[\s]([A-Za-z0-9]+[\s]*\([A-Za-z0-9\[\]\,\s*]*\))([A-Za-z0-9\s*]*)\{"
     r = re.compile(pattern)
     matches = r.search(phrase)
     return matches
@@ -34,12 +34,12 @@ def separate(text):
     regex = re.compile(pattern, re.MULTILINE|re.DOTALL)
     matches = regex.finditer(text)
     indices = [0]
-    [(indices.append(m.span()[0]), indices.append(m.span()[1])) for m in matches if m.group(1) is None]
+    [(indices.append(m.span()[0]+1), indices.append(m.span()[1])) for m in matches if m.group(1) is None]
     return [text[i:j].strip() for i,j in zip(indices, indices[1:]+[None]) if text[i:j]]
 
 def files_info(file, file_name):
     print()
-    print(file, ' ', file_name.split('.')[0], '\n')
+    print(file, '\n', file_name.split('.')[0], '\n')
     with open(file) as f:
         total = ""
         for line in f:
@@ -47,7 +47,7 @@ def files_info(file, file_name):
         aux = remove_comments(total).replace("\n", "")
         for s in separate(aux):
             if recognize_function(s):
-                print(recognize_function(s).group())
+                print(recognize_function(s).groups())
 
 def list_files(startpath = 'file/path'):
     for root, dirs, files in os.walk(startpath):
