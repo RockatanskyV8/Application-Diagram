@@ -23,6 +23,14 @@ def recognize_class(phrase):
     matches = r.search(phrase)
     return matches
 
+def recognize_keywords(params):
+    m = []
+    for i in params[0].split(" "):
+        for w in words:
+            if i in words[w]:
+                m.append(i)
+    print(params, m)
+
 def recognize_function(phrase):
     pattern = r"([A-Za-z0-9\s*]+)[\s]([A-Za-z0-9]+[\s]*\([A-Za-z0-9\[\]\,\s*]*\))([A-Za-z0-9\s*]*)\{"
     r = re.compile(pattern)
@@ -37,9 +45,13 @@ def separate(text):
     [(indices.append(m.span()[0]+1), indices.append(m.span()[1])) for m in matches if m.group(1) is None]
     return [text[i:j].strip() for i,j in zip(indices, indices[1:]+[None]) if text[i:j]]
 
+file_dict = {}
+
 def files_info(file, file_name):
-    print()
-    print(file, '\n', file_name.split('.')[0], '\n')
+    result = []
+    name = file_name.split('.')[0]
+    # print()
+    # print(file)#, '\n')
     with open(file) as f:
         total = ""
         for line in f:
@@ -47,12 +59,20 @@ def files_info(file, file_name):
         aux = remove_comments(total).replace("\n", "")
         for s in separate(aux):
             if recognize_function(s):
-                print(recognize_function(s).groups())
+                # print(recognize_function(s).group(2))
+                result.append(recognize_function(s).group(2))
+    file_dict[name] = result
+    # print({name : result})
 
-def list_files(startpath = 'file/path'):
+def list_files(startpath = '/home/lucas/Scripts/java/fj-21-jdbc'):
     for root, dirs, files in os.walk(startpath):
         for f in files:
             if ".java" in f:
                 files_info(root + '/' + f, f)
+    for func in file_dict:
+        aux = []
+        for f in file_dict[func]:
+            aux.append(f)
+        print(func, aux)
 
 list_files()
