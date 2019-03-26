@@ -17,12 +17,6 @@ def remove_comments(string):
             return match.group(1) # captured quoted-string
     return regex.sub(_replacer, string)
 
-def recognize_class(phrase):
-    pattern = r"class ([A-Za-z0-9]+)\{"
-    r = re.compile(pattern)
-    matches = r.search(phrase)
-    return matches
-
 def recognize_keywords(params):
     m = []
     for i in params[0].split(" "):
@@ -45,34 +39,34 @@ def separate(text):
     [(indices.append(m.span()[0]+1), indices.append(m.span()[1])) for m in matches if m.group(1) is None]
     return [text[i:j].strip() for i,j in zip(indices, indices[1:]+[None]) if text[i:j]]
 
-file_dict = {}
+def function_content(line, func):
+    pattern1 = regex.compile(r'\{((?:[^{}]|(?R))*)\}')
+    result = ""
+    for s in pattern1.search(line).captures(1):
+        if (func + s + '}') in line:
+            result = s
+    return result
 
 def files_info(file, file_name):
-    result = []
+    result = {}
     name = file_name.split('.')[0]
-    # print()
-    # print(file)#, '\n')
+    print()
     with open(file) as f:
         total = ""
         for line in f:
             total = total + (line.replace("\t", ""))
         aux = remove_comments(total).replace("\n", "")
+        print(name)
         for s in separate(aux):
             if recognize_function(s):
-                # print(recognize_function(s).group(2))
-                result.append(recognize_function(s).group(2))
-    file_dict[name] = result
-    # print({name : result})
+                result[recognize_function(s).groups()] = function_content(aux, s)
+                # print(recognize_function(s).groups(),"|", function_content(aux, s))
+    print(result)
 
-def list_files(startpath = '/home/lucas/Scripts/java/fj-21-jdbc'):
+def list_files(startpath = 'file/path'):
     for root, dirs, files in os.walk(startpath):
         for f in files:
             if ".java" in f:
                 files_info(root + '/' + f, f)
-    for func in file_dict:
-        aux = []
-        for f in file_dict[func]:
-            aux.append(f)
-        print(func, aux)
 
 list_files()
