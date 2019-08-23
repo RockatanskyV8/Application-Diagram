@@ -26,10 +26,20 @@ def recognize_keywords(params):
     print(params, m)
 
 def recognize_function(phrase):
-    pattern = r"([A-Za-z0-9\s*]+)[\s]([A-Za-z0-9]+[\s]*\([A-Za-z0-9\[\]\,\s*]*\))([A-Za-z0-9\s*]*)\{"
-    r = re.compile(pattern)
-    matches = r.search(phrase)
+    result = []
+    middle_pattern = r"[\s]([A-Za-z0-9]+[\s]*\([A-Za-z0-9\[\]\,\s*]*\))"
+    end_pattern = r"\{"
+    mp = re.compile(middle_pattern)
+    ep = re.compile(end_pattern)
+    matches = []
+    if (mp.search(phrase) and ep.search(phrase)):
+        matches = mp.search(phrase) # [mp.search(phrase), ep.search(phrase)]
     return matches
+
+def separate_function(phrase):
+    b, e = recognize_function(phrase).span()
+    components = (phrase[:b].split(" "), phrase[b+1:e], (phrase[e+1:-1].strip()).split(" "))
+    return components
 
 def separate(text):
     pattern = r"(\".*?\"|\'.*?\')|([\{\};])"
@@ -54,19 +64,22 @@ def files_info(file, file_name):
     with open(file) as f:
         total = ""
         for line in f:
-            total = total + (line.replace("\t", ""))
-        aux = remove_comments(total).replace("\n", "")
+            total = total + line     # (line.replace("\t", ""))
+        aux = remove_comments(total) # .replace("\n", "")
         print(name)
         for s in separate(aux):
             if recognize_function(s):
-                result[recognize_function(s).groups()] = function_content(aux, s)
-                # print(recognize_function(s).groups(),"|", function_content(aux, s))
-    print(result)
+                # funct = (recognize_function(s))
+                result[s] = function_content(aux, s)
+    return result
 
-def list_files(startpath = 'file/path'):
+def list_files(startpath = 'file'):
     for root, dirs, files in os.walk(startpath):
         for f in files:
             if ".java" in f:
-                files_info(root + '/' + f, f)
+                # files_info(root + '/' + f, f)
+                detalhes = files_info(root + '/' + f, f)
+                for d in detalhes:
+                    print(separate_function(d), ":", detalhes[d])
 
 list_files()
