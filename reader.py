@@ -1,7 +1,7 @@
 import os
 import re
 import regex
-from java import *
+# from java import *
 
 def remove_comments(string):
     pattern = r"(\".*?\"|\'.*?\')|(/\*.*?\*/|//[^\r\n]*$)"
@@ -41,21 +41,42 @@ def separate_function(phrase):
     components = (phrase[:b].split(" "), phrase[b+1:e], (phrase[e+1:-1].strip()).split(" "))
     return components
 
+def recognize_blocks(phrase):
+    pattern = r"{$"
+    reg = re.compile(pattern)
+    return reg.search(phrase)
+
 def separate(text):
     pattern = r"(\".*?\"|\'.*?\')|([\{\};])"
     regex = re.compile(pattern, re.MULTILINE|re.DOTALL)
     matches = regex.finditer(text)
+    # for m in matches:
+    #     print(m)
     indices = [0]
     [(indices.append(m.span()[0]+1), indices.append(m.span()[1])) for m in matches if m.group(1) is None]
-    return [text[i:j].strip() for i,j in zip(indices, indices[1:]+[None]) if text[i:j]]
+    result = [text[i:j].strip() for i,j in zip(indices, indices[1:]+[None]) if text[i:j]]
+    return result
 
 def function_content(line, func):
+    # print("func", func)
+    # print("line", line)
     pattern1 = regex.compile(r'\{((?:[^{}]|(?R))*)\}')
     result = ""
     for s in pattern1.search(line).captures(1):
         if (func + s + '}') in line:
             result = s
     return result
+
+def block_content(line, bloc):
+    # print("func", func)
+    # print("line", line)
+    pattern1 = regex.compile(r'\{((?:[^{}]|(?R))*)\}')
+    result = ""
+    for s in pattern1.search(line).captures(1):
+        if (bloc + s + '}') in line:
+            result = s
+    return result
+
 
 def files_info(file, file_name):
     result = {}
@@ -69,7 +90,6 @@ def files_info(file, file_name):
         print(name)
         for s in separate(aux):
             if recognize_function(s):
-                # funct = (recognize_function(s))
                 result[s] = function_content(aux, s)
     return result
 
@@ -80,6 +100,14 @@ def list_files(startpath = 'file'):
                 # files_info(root + '/' + f, f)
                 detalhes = files_info(root + '/' + f, f)
                 for d in detalhes:
-                    print(separate_function(d), ":", detalhes[d])
+                    print(separate_function(d), ":")
+                    # print("united\n", detalhes[d], "\n")
+                    parts = separate(detalhes[d])
+                    # print(parts)
+                    for det in parts:
+                        # print(det.replace("\n", "").replace("\t", ""))
+                        if recognize_blocks(det):
+                            print(det.replace("\n", "").replace("\t", "")) #, ":", block_content(detalhes[d], det))
+                    print("\n\n")
 
 list_files()
