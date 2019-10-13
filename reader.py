@@ -1,7 +1,7 @@
 import os
 import re
 import regex
-from java import *
+#from java import *
 
 def remove_comments(string):
     #font: https://stackoverflow.com/a/18381470/8316383
@@ -18,14 +18,12 @@ def remove_comments(string):
             return match.group(1) # captured quoted-string
     return regex.sub(_replacer, string)
 
-def ignore_strings(string):
-    pattern = r"(\".*?\"|\'.*?\')" #r'([^a-zA-z0-9\"\'\s])'
-    result = regex.finditer(pattern, string)
-    out = []
-    if result is not None:
-        for r in result:
-            out.append(r.spans()[0])
-    return out
+def separators(string):
+    pattern = r"(\".*?\"|\'.*?\')|(\W)" #r'([^a-zA-z0-9\"\'\s])'
+    matches = regex.finditer(pattern, string)
+    indices = [0]
+    [(indices.append(m.span()[0]), indices.append(m.span()[1])) for m in matches]
+    return [string[i:j].strip() for i,j in zip(indices, indices[1:]+[None]) if string[i:j]]
 
 def recognize_function(phrase):
     result = []
@@ -88,8 +86,7 @@ def list_files(startpath = 'file/path'):
                     aux = (detalhes[d].replace("\t", "").replace("\n", "").replace("}", "")).split(";")
                     print(separate_function(d) , ":\n" )
                     for a in aux:
-                        print(a)
-                        print( ignore_strings(a) )
+                        print(separators(a))
 
-list_files()
+list_files('/home/lucas/Scripts/java/fj-21-jdbc')
 
