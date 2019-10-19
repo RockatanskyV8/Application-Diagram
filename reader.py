@@ -90,3 +90,13 @@ def list_files(startpath = 'file/path'):
 
 list_files('/home/lucas/Scripts/java/fj-21-jdbc')
 
+#teste
+#import regex
+#def function_content(line):
+#    pattern1 = regex.search(r'\{((?:[^{}]|(?R))+)\}', line)
+#    #result = pattern1.(line)
+#    print(line)
+#    for r in pattern1.captures(1)[::-1]:
+#        print(r)
+
+#function_content( "Eu sou uma string {dentro de uma string {dentro de outra} }" )
